@@ -1,0 +1,5 @@
+**Problem Statement:**
+
+Car rental businesses have no reliable digital storefront to showcase their fleet, manage availability visibility, and convert browsing visitors into confirmed bookings — forcing customers to rely on phone calls, walk-ins, or generic booking platforms that offer no brand control.
+
+Build a car rental booking website that lets customers search available vehicles by location, date, and car type; browse the fleet with detailed specs and pricing; and complete a booking end-to-end — while giving the business a professional web presence that builds trust and drives direct reservations.
