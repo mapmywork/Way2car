@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
     const datesToBook = getDateRange(start, end);
 
     // Prisma Transaction: Double-check availability and create booking
-    const booking = await db.$transaction(async (tx) => {
+    const booking = await db.$transaction(async (tx: any) => {
       // 1. Check if any dates are already marked unavailable (Row locking implicitly handled if we try to update/create availability)
       const existingUnavailable = await tx.availability.findMany({
         where: {
