@@ -53,7 +53,7 @@ export async function GET(
     if (unavailableDates.length > 0) {
       return apiSuccess({
         available: false,
-        unavailableDates: unavailableDates.map(d => d.date.toISOString().split("T")[0]),
+        unavailableDates: unavailableDates.map((d: any) => d.date.toISOString().split("T")[0]),
       });
     }
 
