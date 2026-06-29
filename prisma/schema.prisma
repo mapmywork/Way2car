@@ -1,0 +1,170 @@
+// ─── Prisma Schema — Way2Car Car Rental Platform ─────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+}
+
+enum VehicleType {
+  SEDAN
+  SUV
+  HATCHBACK
+  LUXURY
+  CONVERTIBLE
+  VAN
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+// ─── Models ──────────────────────────────────────────────────────
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  name         String
+  phone        String?
+  passwordHash String?
+  role         UserRole  @default(CUSTOMER)
+  image        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  bookings Booking[]
+
+  @@map("users")
+}
+
+model Location {
+  id        String   @id @default(uuid())
+  name      String
+  address   String
+  city      String
+  state     String
+  zip       String
+  latitude  Float
+  longitude Float
+  hours     String[]
+  phone     String?
+  email     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  vehicles         Vehicle[]
+  pickupBookings   Booking[] @relation("PickupLocation")
+  dropoffBookings  Booking[] @relation("DropoffLocation")
+
+  @@map("locations")
+}
+
+model Vehicle {
+  id           String      @id @default(uuid())
+  make         String
+  model        String
+  year         Int
+  type         VehicleType
+  transmission String      // "AUTOMATIC" | "MANUAL"
+  fuelType     String      // "PETROL" | "DIESEL" | "ELECTRIC" | "HYBRID"
+  seats        Int
+  doors        Int
+  pricePerDay  Int         // stored in paise (₹1,500 = 150000)
+  images       String[]
+  description  String
+  features     Json        // VehicleFeatures object
+  locationId   String
+  isActive     Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  location      Location       @relation(fields: [locationId], references: [id])
+  bookings      Booking[]
+  availability  Availability[]
+
+  @@index([locationId])
+  @@index([type])
+  @@index([isActive])
+  @@map("vehicles")
+}
+
+model Booking {
+  id                String        @id @default(uuid())
+  confirmationCode  String        @unique
+  userId            String
+  vehicleId         String
+  pickupLocationId  String
+  dropoffLocationId String
+  pickupDate        DateTime
+  dropoffDate       DateTime
+  totalPrice        Int           // stored in paise
+  taxAmount         Int           // stored in paise
+  status            BookingStatus @default(PENDING)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  user            User     @relation(fields: [userId], references: [id])
+  vehicle         Vehicle  @relation(fields: [vehicleId], references: [id])
+  pickupLocation  Location @relation("PickupLocation", fields: [pickupLocationId], references: [id])
+  dropoffLocation Location @relation("DropoffLocation", fields: [dropoffLocationId], references: [id])
+  payment         Payment?
+
+  @@index([userId])
+  @@index([vehicleId])
+  @@index([status])
+  @@index([confirmationCode])
+  @@map("bookings")
+}
+
+model Payment {
+  id                 String        @id @default(uuid())
+  bookingId          String        @unique
+  razorpayOrderId    String?
+  razorpayPaymentId  String?       @unique
+  razorpaySignature  String?
+  amount             Int           // stored in paise
+  currency           String        @default("INR")
+  status             PaymentStatus @default(PENDING)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+
+  @@map("payments")
+}
+
+model Availability {
+  id          String   @id @default(uuid())
+  vehicleId   String
+  date        DateTime @db.Date
+  isAvailable Boolean  @default(true)
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id])
+
+  @@unique([vehicleId, date])
+  @@index([vehicleId])
+  @@index([date])
+  @@map("availability")
+}

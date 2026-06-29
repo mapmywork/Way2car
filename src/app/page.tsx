@@ -1,66 +1,49 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import { db } from "@/lib/db";
+import Hero from "@/components/home/Hero";
+import QuickSearch from "@/components/home/QuickSearch";
+import FeaturedFleet from "@/components/home/FeaturedFleet";
+import HowItWorks from "@/components/home/HowItWorks";
 
-export default function Home() {
+// Keep it dynamic so featured fleet is somewhat fresh, 
+// though we could revalidate every hour in a real app
+export const revalidate = 3600;
+
+export default async function Home() {
+  // Fetch up to 4 active vehicles for the featured section
+  const vehicles = await db.vehicle.findMany({
+    where: { isActive: true },
+    include: { location: true },
+    take: 4,
+    orderBy: { createdAt: "desc" }
+  });
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <>
+      <Hero />
+      <QuickSearch />
+      <FeaturedFleet vehicles={vehicles} />
+      <HowItWorks />
+      
+      {/* CTA Banner */}
+      <section style={{
+        padding: "100px 0",
+        background: "linear-gradient(135deg, #f1f5f9 0%, #dbeafe 100%)",
+        textAlign: "center"
+      }}>
+        <div className="container">
+          <h2 className="heading-xl" style={{ marginBottom: "24px", color: "#0f172a" }}>Ready to Hit the Road?</h2>
+          <p style={{ fontSize: "1.25rem", color: "#475569", maxWidth: "600px", margin: "0 auto 40px" }}>
+            Join thousands of satisfied customers who have experienced the Way2Car difference.
           </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
+          <a href="/fleet" style={{
+            display: "inline-flex", padding: "16px 40px", fontSize: "1.125rem", fontWeight: 600,
+            backgroundColor: "#3b82f6", color: "#fff", borderRadius: "99px", textDecoration: "none",
+            boxShadow: "0 10px 25px rgba(0,0,0,0.2)", transition: "transform 0.2s"
+          }}>
+            Browse All Vehicles
           </a>
         </div>
-      </main>
-    </div>
+      </section>
+    </>
   );
 }
